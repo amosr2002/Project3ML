@@ -11,7 +11,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import GridSearchCV
 from scikeras.wrappers import KerasClassifier
-
+from sklearn.metrics import confusion_matrix
+from tensorflow.keras import datasets, layers, models
+import seaborn as sns
 
 
 # PLS DO NOT EXCEED THIS TIME LIMIT
@@ -29,7 +31,7 @@ parser = ArgumentParser()
 # Hint: Large Epochs will achieve better performance.
 # Hint: Large Hidden Size will achieve better performance.
 parser.add_argument("--optimizer", default='sgd', type=str)
-parser.add_argument("--epochs", default=30, type=int)
+parser.add_argument("--epochs", default=75, type=int)
 parser.add_argument("--hidden_size", default=32, type=int)
 parser.add_argument("--scale_factor", default=1, type=float)
 ###########################MAGIC ENDS HERE##########################
@@ -135,6 +137,11 @@ model = Sequential()
 # Hint: Deeper networks (i.e., more hidden layers) and a different activation function may achieve better results.
 model.add(Flatten())
 model.add(Dense(args.hidden_size, activation="relu")) # first layer
+# model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)))
+# model.add(layers.MaxPooling2D((2, 2)))
+# model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+# model.add(layers.MaxPooling2D((2, 2)))
+# model.add(layers.Conv2D(64, (3, 3), activation='relu'))
 
 ###########################MAGIC ENDS HERE##########################
 model.add(Dense(num_labels)) # last layer
@@ -151,9 +158,11 @@ history = model.fit(x_train, y_train,
                     epochs=args.epochs,
                     batch_size=512)
 print(history.history)
+
 # Report Results on the test datasets
 test_loss, test_acc = model.evaluate(x_test,  y_test, verbose=2)
 print("\nTest Accuracy: ", test_acc)
+
 
 end_time = time()
 assert end_time - start_time < MAXIMIZED_RUNNINGTIME, "YOU HAVE EXCEED THE TIME LIMIT, PLEASE CONSIDER USE SMALLER EPOCHS and SHAWLLOW LAYERS"
@@ -170,18 +179,18 @@ from sklearn.metrics import precision_score, recall_score
 import matplotlib.pyplot as plt
 
 ###########################MAGIC HAPPENS HERE##########################
-optimizer = ['SGD', 'RMSprop', 'Adagrad', 'Adadelta', 'Adam', 'Adamax', 'Nadam']
-param_grid = dict(optimizer=optimizer)
-keras_clf = KerasClassifier(model = model, epochs=100, batch_size=10, verbose=0)
-grid = GridSearchCV(estimator=keras_clf, param_grid=param_grid, n_jobs=-1, cv=5, scoring='accuracy')
-grid_result = grid.fit(x_train, y_train)
-# summarize results
-print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-means = grid_result.cv_results_['mean_test_score']
-stds = grid_result.cv_results_['std_test_score']
-params = grid_result.cv_results_['params']
-for mean, stdev, param in zip(means, stds, params):
-    print("%f (%f) with: %r" % (mean, stdev, param))
+# optimizer = ['SGD', 'RMSprop', 'Adagrad', 'Adadelta', 'Adam', 'Adamax', 'Nadam']
+# param_grid = dict(optimizer=optimizer)
+# keras_clf = KerasClassifier(model = model, epochs=100, batch_size=10, verbose=0)
+# grid = GridSearchCV(estimator=keras_clf, param_grid=param_grid, n_jobs=-1, cv=5, scoring='accuracy')
+# grid_result = grid.fit(x_train, y_train)
+# # summarize results
+# print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+# means = grid_result.cv_results_['mean_test_score']
+# stds = grid_result.cv_results_['std_test_score']
+# params = grid_result.cv_results_['params']
+# for mean, stdev, param in zip(means, stds, params):
+#     print("%f (%f) with: %r" % (mean, stdev, param))
 
 # Visualize the confusion matrix by matplotlib and sklearn based on y_test_predict and y_test
 # Report the precision and recall for 10 different classes
@@ -193,6 +202,10 @@ plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
+plt.show()
+
+conf_matrix = confusion_matrix(y_test, y_test_predict)
+sns.heatmap(conf_matrix)
 plt.show()
 ###########################MAGIC ENDS HERE##########################
 
