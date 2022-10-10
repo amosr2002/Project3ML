@@ -39,14 +39,14 @@ parser.add_argument("--model_nick_name", type=str, default=None)
 args = parser.parse_args()
 start_time = time()
 # Hyper-parameter tuning
-# Custom dataset preprocess
+# Custom dataset preprocesst
 
 # create the output dir if it not exists.
 if os.path.exists(args.model_output_path) is False:
     os.mkdir(args.model_output_path)
 
 if args.model_nick_name is None:
-    setattr(args, "model_nick_name", f"OPT:{args.optimizer}-E:{args.epochs}-H:{args.hidden_size}-S:{args.scale_factor}")
+    setattr(args, "model_nick_name", f"OPT-{args.optimizer}-E-{args.epochs}-H-{args.hidden_size}-S-{args.scale_factor}")
 
 '''
 1. Load the dataset
@@ -64,6 +64,7 @@ class_names = {
     8:"ship",
     9:"truck"
 }
+
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 
 # check the validity of dataset
