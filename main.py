@@ -8,6 +8,10 @@ from time import time
 import os
 import random
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import GridSearchCV
+from scikeras.wrappers import KerasClassifier
+
 
 
 # PLS DO NOT EXCEED THIS TIME LIMIT
@@ -25,9 +29,9 @@ parser = ArgumentParser()
 # Hint: Large Epochs will achieve better performance.
 # Hint: Large Hidden Size will achieve better performance.
 parser.add_argument("--optimizer", default='sgd', type=str)
-parser.add_argument("--epochs", default=10, type=int)
+parser.add_argument("--epochs", default=30, type=int)
 parser.add_argument("--hidden_size", default=32, type=int)
-parser.add_argument("--scale_factor", default=10, type=float)
+parser.add_argument("--scale_factor", default=1, type=float)
 ###########################MAGIC ENDS HERE##########################
 
 parser.add_argument("--is_pic_vis", action="store_true")
@@ -100,9 +104,13 @@ if args.is_pic_vis:
 ###########################MAGIC HAPPENS HERE##########################
 # Scale the data attributes 
 # Hint: Scaling the data in the range 0-1 would achieve better results.
-x_train = x_train / args.scale_factor
-x_valid = x_valid / args.scale_factor
-x_test = x_test / args.scale_factor
+
+scaler = MinMaxScaler(feature_range=(0,args.scale_factor))
+
+x_train = scaler.fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
+x_valid = scaler.transform(x_valid.reshape(-1, x_valid.shape[-1])).reshape(x_valid.shape)
+x_test = scaler.transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
+
 
 ###########################MAGIC ENDS HERE##########################
 
@@ -120,6 +128,9 @@ if args.is_pic_vis:
 num_labels = 10
 model = Sequential()
 ###########################MAGIC HAPPENS HERE##########################
+
+
+
 # Build up a neural network to achieve better performance.
 # Hint: Deeper networks (i.e., more hidden layers) and a different activation function may achieve better results.
 model.add(Flatten())
@@ -159,10 +170,30 @@ from sklearn.metrics import precision_score, recall_score
 import matplotlib.pyplot as plt
 
 ###########################MAGIC HAPPENS HERE##########################
+optimizer = ['SGD', 'RMSprop', 'Adagrad', 'Adadelta', 'Adam', 'Adamax', 'Nadam']
+param_grid = dict(optimizer=optimizer)
+keras_clf = KerasClassifier(model = model, epochs=100, batch_size=10, verbose=0)
+grid = GridSearchCV(estimator=keras_clf, param_grid=param_grid, n_jobs=-1, cv=5, scoring='accuracy')
+grid_result = grid.fit(x_train, y_train)
+# summarize results
+print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+means = grid_result.cv_results_['mean_test_score']
+stds = grid_result.cv_results_['std_test_score']
+params = grid_result.cv_results_['params']
+for mean, stdev, param in zip(means, stds, params):
+    print("%f (%f) with: %r" % (mean, stdev, param))
+
 # Visualize the confusion matrix by matplotlib and sklearn based on y_test_predict and y_test
 # Report the precision and recall for 10 different classes
 # Hint: check the precision and recall functions from sklearn package or you can implement these function by yourselves.
 
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.show()
 ###########################MAGIC ENDS HERE##########################
 
 
