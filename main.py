@@ -114,6 +114,9 @@ if args.is_pic_vis:
 ##MinMax Scaler consistently Achieved us better accuracy than the Default Scaler
 scaler = MinMaxScaler(feature_range=(0,args.scale_factor))
 
+
+#Used fit_transform for train, but only used transform for Validation and Test
+# because the scaler was already fitted
 x_train = scaler.fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
 x_valid = scaler.transform(x_valid.reshape(-1, x_valid.shape[-1])).reshape(x_valid.shape)
 x_test = scaler.transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
@@ -293,6 +296,13 @@ if args.is_pic_vis:
         plt.xlabel(class_names[y_test[i][0]])
         plt.show()
 
+
+#Code to find the misclassified image
+for i in not_equal3:
+    print(y_test.flatten()[i])
+
+for x in not_equal3:
+    print(y_test_predict[x])
 
 #Precision and Recall Weighted Scores
 print('Precision Score: ', precision_score(y_test,y_test_predict, average='weighted'))
